@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuccessApp - Daily Task Tracker, Timetable & Gratitude Journal</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">SuccessApp</h1>
+            <div class="header-right">
+                <div class="user-info" id="userInfo"></div>
+                <div class="auth-message" id="authMessage"></div>
+                <div class="auth-actions" style="display:flex; gap:8px; align-items:center;">
+                    <button id="signInBtn" class="control-btn">Sign in with Google</button>
+                    <button id="signOutBtn" class="control-btn warning" style="display:none;">Sign out</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Auth Overlay (shown until signed in) -->
+        <div id="authOverlay" class="auth-overlay">
+            <div class="auth-overlay-card">
+                <h2>Please sign in to continue</h2>
+                <p class="auth-overlay-text">Sign in with Google to save and sync your data across devices.</p>
+                <button id="overlaySignInBtn" class="control-btn">Sign in with Google</button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="tasks">
+                <span class="tab-icon">📋</span>
+                Daily Tasks
+            </button>
+            <button class="tab-btn" data-tab="timetable">
+                <span class="tab-icon">📅</span>
+                Timetable
+            </button>
+            <button class="tab-btn" data-tab="gratitude">
+                <span class="tab-icon">❤️</span>
+                Gratitude Journal
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Task Tracker Tab -->
+            <div id="tasks-tab" class="tab-content active">
+                <div class="task-header">
+                    <h2>Daily Task Tracker</h2>
+                    <div class="date-selector">
+                        <input type="date" id="taskDate" class="date-input">
+                        <button id="todayBtn" class="today-btn">Today</button>
+                    </div>
+                </div>
+                
+                <div class="task-sections">
+                    <div class="task-section signal">
+                        <h3>🚨 Signal (High Priority)</h3>
+                        <div class="add-task">
+                            <input type="text" id="signalInput" placeholder="Add high-priority task..." class="task-input">
+                            <button onclick="addTask('signal')" class="add-btn">+</button>
+                        </div>
+                        <ul id="signalTasks" class="task-list"></ul>
+                    </div>
+                    
+                    <div class="task-section noise">
+                        <h3>📝 Noise (Low Priority)</h3>
+                        <div class="add-task">
+                            <input type="text" id="noiseInput" placeholder="Add optional task..." class="task-input">
+                            <button onclick="addTask('noise')" class="add-btn">+</button>
+                        </div>
+                        <ul id="noiseTasks" class="task-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timetable Tab -->
+            <div id="timetable-tab" class="tab-content">
+                <div class="timetable-header">
+                    <h2>Daily Timetable</h2>
+                    <div class="timetable-controls">
+                        <button id="markAllDone" class="control-btn success">Mark All Done</button>
+                        <button id="resetToday" class="control-btn warning">Reset Today</button>
+                        <button id="compactToggle" class="control-btn">Compact</button>
+                    </div>
+                </div>
+                
+                <div class="timetable-stats">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span id="progressText">0% complete</span>
+                    </div>
+                    <div class="stats-chips">
+                        <span id="doneCount" class="stat-chip">0 done</span>
+                        <span id="leftCount" class="stat-chip">0 left</span>
+                        <span id="currentBlock" class="stat-chip">—</span>
+                    </div>
+                </div>
+                
+                <div id="timetableList" class="timetable-list"></div>
+            </div>
+
+            <!-- Gratitude Journal Tab -->
+            <div id="gratitude-tab" class="tab-content">
+                <div class="gratitude-header">
+                    <h2>Gratitude Journal</h2>
+                    <div class="gratitude-controls">
+                        <input type="date" id="gratitudeDate" class="date-input">
+                        <button id="gratitudeCalendarBtn" class="calendar-btn">📅</button>
+                    </div>
+                </div>
+                
+                <div class="gratitude-content">
+                    <div class="add-gratitude">
+                        <div class="prompt-box" id="promptBox">
+                            <p class="prompt-text" id="promptText">What made you smile today?</p>
+                        </div>
+                        <textarea id="gratitudeInput" placeholder="I'm grateful for..." class="gratitude-textarea"></textarea>
+                        <button onclick="addGratitudeEntry()" class="add-gratitude-btn">Add Entry</button>
+                    </div>
+                    
+                    <div class="gratitude-entries" id="gratitudeEntries"></div>
+                </div>
+                
+                <!-- Calendar Modal -->
+                <div id="calendarModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Select Date</h3>
+                            <button class="close-btn" onclick="closeCalendar()">&times;</button>
+                        </div>
+                        <div class="calendar-container" id="calendarContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="firebase-config.js?v=20250827"></script>
+    <script src="app.js?v=20250827"></script>
+</body>
+</html>

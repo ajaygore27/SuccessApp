@@ -1,0 +1,995 @@
+/* SuccessApp Styles - Combined Design System */
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    --signal-gradient: linear-gradient(135deg, #ff6b6b, #ff8e8e, #ffa8a8);
+    --noise-gradient: linear-gradient(135deg, #4ecdc4, #45b7d1, #96ceb4);
+    --dark-bg: #0f172a;
+    --panel-bg: #0b1222;
+    --card-bg: #111827;
+    --text-primary: #e5e7eb;
+    --text-muted: #94a3b8;
+    --accent: #60a5fa;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --border: #1f2937;
+    --done-bg: #052e16;
+    --done-border: #15803d;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--primary-gradient);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    min-height: 100vh;
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.2) 0%, transparent 50%);
+    z-index: -1;
+    animation: float 20s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-20px) rotate(1deg); }
+    66% { transform: translateY(10px) rotate(-1deg); }
+}
+
+.app-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 30px;
+    box-shadow: 
+        0 8px 32px rgba(31, 38, 135, 0.37),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+    animation: containerFloat 6s ease-in-out infinite;
+}
+
+@keyframes containerFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Header */
+.app-header {
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Auth Overlay */
+.auth-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.auth-overlay-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.auth-overlay-card h2 {
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.auth-overlay-text {
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.header-right {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 12px;
+    z-index: 1;
+}
+
+.app-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.app-title {
+    font-size: 2.5rem;
+    font-weight: 200;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: textGlow 4s ease infinite;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes textGlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.auth-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    position: relative;
+    z-index: 1;
+}
+
+.auth-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* Auth area in header */
+.user-info {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-right: 0;
+    z-index: 1;
+    white-space: nowrap;
+}
+
+.auth-message {
+    color: #f59e0b;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.auth-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1;
+}
+
+.app-header .control-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.app-header .control-btn.warning {
+    background: linear-gradient(180deg, #ef4444, #b91c1c);
+    border-color: #7f1d1d;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn.active {
+    background: rgba(255, 255, 255, 0.2);
+    border-bottom: 3px solid var(--accent);
+}
+
+.tab-icon {
+    font-size: 1.2rem;
+}
+
+/* Main Content */
+.main-content {
+    padding: 30px;
+    min-height: 600px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Task Tracker Styles */
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.task-header h2 {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--text-primary);
+}
+
+.date-selector {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.date-input {
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.today-btn {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.today-btn:hover {
+    background: #4f46e5;
+}
+
+.task-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.task-section {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.task-section.signal {
+    background: var(--noise-gradient);
+    background-size: 200% 200%;
+    animation: gradientPulse 8s ease infinite;
+}
+
+.task-section.noise {
+    background: var(--signal-gradient);
+    background-size: 200% 200%;
+    animation: gradientPulse 8s ease infinite reverse;
+}
+
+@keyframes gradientPulse {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.task-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: white;
+    font-weight: 300;
+}
+
+.add-task {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.task-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.task-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.task-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
+}
+
+.add-btn {
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 25px;
+    color: white;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.add-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+.task-list {
+    list-style: none;
+}
+
+.task-item {
+    background: rgba(255, 255, 255, 0.15);
+    margin-bottom: 12px;
+    padding: 16px 20px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.task-item:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.task-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.task-checkbox.completed {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.9);
+}
+
+.task-checkbox.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #333;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.task-text {
+    flex: 1;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.task-item.completed .task-text {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Timetable Styles */
+.timetable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.timetable-header h2 {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--text-primary);
+}
+
+.timetable-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.control-btn {
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    transform: translateY(-1px);
+    border-color: #263141;
+}
+
+.control-btn.success {
+    background: linear-gradient(180deg, #16a34a, #15803d);
+    border-color: #166534;
+}
+
+.control-btn.warning {
+    background: linear-gradient(180deg, #f59e0b, #d97706);
+    border-color: #b45309;
+}
+
+.timetable-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 10px;
+    background: var(--panel-bg);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22d3ee, #60a5fa, #a78bfa);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.stats-chips {
+    display: flex;
+    gap: 10px;
+}
+
+.stat-chip {
+    padding: 5px 12px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.timetable-list {
+    display: grid;
+    gap: 10px;
+}
+
+.timetable-block {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    align-items: center;
+    gap: 15px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+.timetable-block:hover {
+    border-color: #2a3647;
+    transform: translateY(-1px);
+}
+
+.timetable-block.now {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.15) inset;
+}
+
+.timetable-block.done {
+    background: linear-gradient(180deg, var(--done-bg), #031a10);
+    border-color: var(--done-border);
+    opacity: 0.95;
+}
+
+.timetable-time {
+    color: #c7d2fe;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.timetable-activity {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.timetable-notes {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
+.timetable-block.done .timetable-activity {
+    text-decoration: line-through;
+    color: #86efac;
+}
+
+.timetable-block.done .timetable-time {
+    color: #86efac;
+}
+
+.timetable-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.toggle-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--panel-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Gratitude Journal Styles */
+.gratitude-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.gratitude-header h2 {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--text-primary);
+}
+
+.gratitude-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.calendar-btn {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.calendar-btn:hover {
+    background: #4f46e5;
+}
+
+.gratitude-content {
+    display: grid;
+    gap: 30px;
+}
+
+.add-gratitude {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.prompt-box {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.prompt-text {
+    color: white;
+    font-weight: 500;
+    margin: 0;
+}
+
+.gratitude-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-size: 1rem;
+    resize: vertical;
+    margin-bottom: 15px;
+}
+
+.gratitude-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.add-gratitude-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.add-gratitude-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.gratitude-entries {
+    display: grid;
+    gap: 15px;
+}
+
+.gratitude-entry {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.gratitude-entry:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.gratitude-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.gratitude-date {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.gratitude-text {
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--panel-bg);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-container {
+    padding: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-header button {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.calendar-header button:hover {
+    background: #4f46e5;
+}
+
+.calendar-header h4 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    padding: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.calendar-day {
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+    border: 1px solid transparent;
+}
+
+.calendar-day:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent);
+}
+
+.calendar-day.today {
+    background: var(--accent);
+    color: white;
+    font-weight: bold;
+}
+
+.calendar-day.selected {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: bold;
+    border-color: var(--accent);
+}
+
+.calendar-day.empty {
+    cursor: default;
+    background: none;
+}
+
+.calendar-day.empty:hover {
+    background: none;
+    border-color: transparent;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .app-container {
+        margin: 10px;
+        border-radius: 20px;
+    }
+    
+    .app-header {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .app-title {
+        font-size: 2rem;
+    }
+    
+    .tab-navigation {
+        flex-direction: column;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+    
+    .task-sections {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .task-header,
+    .timetable-header,
+    .gratitude-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .timetable-stats {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .progress-container {
+        width: 100%;
+    }
+    
+    .progress-bar {
+        width: 100%;
+    }
+    
+    .stats-chips {
+        justify-content: center;
+    }
+    
+    .timetable-block {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .timetable-time {
+        text-align: left;
+    }
+    
+    .timetable-actions {
+        justify-content: flex-end;
+    }
+    .header-right {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .auth-actions { order: 2; }
+    .user-info { order: 1; }
+}
