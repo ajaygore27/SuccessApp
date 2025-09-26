@@ -10,24 +10,11 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Initialize Firestore
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Initialize Auth
-const auth = firebase.auth();
+// Initialize the Google Auth Provider
 const googleProvider = new firebase.auth.GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
-
-// Ensure sessions persist across reloads
-try {
-  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-} catch (e) {
-  console.warn('Could not set auth persistence:', e);
-}
-
-// Export for use in other scripts
-window.db = db;
-window.auth = auth;
-window.googleProvider = googleProvider;
+// Optional: Add scopes you might need
+// googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');

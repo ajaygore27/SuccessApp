@@ -54,92 +54,157 @@ const gratitudePrompts = [
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
+// ===== INITIALIZATION FUNCTIONS =====
 
-async function initializeApp() {
-    // Wait for auth state; Google sign-in only
-    await ensureAuth();
-    updateAuthUI();
+function initializeDatePicker() {
+    console.log('Date picker initialized');
+    // Add your date picker initialization logic here
+    const taskDateInput = document.getElementById('taskDate');
+    const gratitudeDateInput = document.getElementById('gratitudeDate');
+    const todayBtn = document.getElementById('todayBtn');
     
-    // Initialize tab navigation
-    initializeTabs();
-    
-    // Initialize date inputs
-    initializeDateInputs();
-    
-    // Initialize event listeners
-    initializeEventListeners();
-    
-    // Load data only if signed in
-    if (currentUser) {
-        await loadAllData();
-    } else {
-        clearAllData();
+    if (taskDateInput) {
+        taskDateInput.value = new Date().toISOString().split('T')[0];
     }
     
-    // Set initial tab
-    showTab('tasks');
-
-    // Optional: auto-start sign-in flow if URL has ?login=1
-    try {
-        const params = new URLSearchParams(window.location.search);
-        if (!currentUser && typeof auth !== 'undefined' && typeof googleProvider !== 'undefined' && params.get('login') === '1') {
-            console.log('[Auth] Auto-start redirect sign-in due to login=1');
-            await auth.signInWithRedirect(googleProvider);
-        }
-    } catch (e) {
-        console.warn('[Auth] Auto-login error:', e);
+    if (gratitudeDateInput) {
+        gratitudeDateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    if (todayBtn) {
+        todayBtn.addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            if (taskDateInput) taskDateInput.value = today;
+            if (gratitudeDateInput) gratitudeDateInput.value = today;
+            // Refresh data for today
+            if (auth.currentUser) {
+                loadUserData(auth.currentUser.uid);
+            }
+        });
     }
 }
 
+function initializeTabs() {
+    console.log('Tabs initialized');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.getAttribute('data-tab');
+            
+            // Remove active class from all buttons and contents
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked button and corresponding content
+            button.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        });
+    });
+}
+
+function initializeTimetable() {
+    console.log('Timetable initialized');
+    // Add timetable button handlers
+    const markAllBtn = document.getElementById('markAllDone');
+    const resetBtn = document.getElementById('resetToday');
+    const compactBtn = document.getElementById('compactToggle');
+    
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', () => {
+            // Your mark all logic here
+            console.log('Mark all clicked');
+        });
+    }
+    
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Reset all progress for today?')) {
+                console.log('Reset clicked');
+            }
+        });
+    }
+    
+    if (compactBtn) {
+        compactBtn.addEventListener('click', () => {
+            console.log('Compact toggle clicked');
+        });
+    }
+}
+
+function initializeGratitudeJournal() {
+    console.log('Gratitude journal initialized');
+    const calendarBtn = document.getElementById('gratitudeCalendarBtn');
+    
+    if (calendarBtn) {
+        calendarBtn.addEventListener('click', () => {
+            console.log('Calendar button clicked');
+            // Your calendar modal logic here
+        });
+    }
+    
+    // Initialize gratitude prompt
+    updateGratitudePrompt();
+}
+async function initializeApp() {
+    try {
+        console.log('Waiting for authentication...');
+        const user = await ensureAuth();
+        console.log('User authenticated:', user.uid);
+        
+        // Now it's safe to initialize your app components
+        try {
+            if (typeof initializeDatePicker === 'function') {
+                initializeDatePicker();
+            }
+            if (typeof initializeTabs === 'function') {
+                initializeTabs();
+            }
+            if (typeof initializeTimetable === 'function') {
+                initializeTimetable();
+            }
+            if (typeof initializeGratitudeJournal === 'function') {
+                initializeGratitudeJournal();
+            }
+            
+            // Load user data
+            loadUserData(user.uid);
+            
+        } catch (initError) {
+            console.error('Error initializing app components:', initError);
+            // Continue anyway - don't break the whole app
+        }
+        
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        // App will remain in "signed out" state
+    }
+}
+
+// Call this when your app starts
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, waiting for auth...');
+    // Let the auth system handle the initial state
+    // The app will initialize when auth is confirmed
+});
+
 // Auth helpers
 async function ensureAuth() {
-    return new Promise((resolve) => {
-        if (typeof auth === 'undefined') {
-            currentUser = null;
-            return resolve();
+    return new Promise((resolve, reject) => {
+        if (auth.currentUser) {
+            resolve(auth.currentUser);
+        } else {
+            // Wait for auth state to change
+            const unsubscribe = auth.onAuthStateChanged(user => {
+                unsubscribe(); // Remove listener after first event
+                if (user) {
+                    resolve(user);
+                } else {
+                    reject(new Error('User not authenticated'));
+                }
+            }, reject);
         }
-        // Handle redirect results once on load (ignore if none)
-        auth.getRedirectResult().catch((e) => {
-            console.warn('Redirect sign-in result error:', e);
-        });
-        let resolved = false;
-        auth.onAuthStateChanged((user) => {
-            // Clean up any existing realtime listeners on user switch
-            if (unsubscribeTasks) { unsubscribeTasks(); unsubscribeTasks = null; }
-            if (unsubscribeTimetable) { unsubscribeTimetable(); unsubscribeTimetable = null; }
-            if (unsubscribeGratitude) { unsubscribeGratitude(); unsubscribeGratitude = null; }
-            
-            if (user) {
-                currentUser = {
-                    uid: user.uid,
-                    isAnonymous: !!user.isAnonymous,
-                    displayName: user.displayName || '',
-                    email: user.email || ''
-                };
-            } else {
-                currentUser = null;
-                clearAllData();
-                // If not on signin page, redirect there
-                try {
-                    const isSignInPage = /signin\.html($|\?)/.test(window.location.pathname) || window.location.pathname.endsWith('/');
-                    if (!isSignInPage) {
-                        window.location.href = 'signin.html';
-                    }
-                } catch {}
-            }
-            updateAuthUI();
-            if (!resolved) { resolved = true; resolve(); }
-            // After initial resolve, refresh data on subsequent auth changes
-            if (currentUser) {
-                loadAllData();
-                // If on signin page, go to app
-                try {
-                    if (/signin\.html($|\?)/.test(window.location.pathname)) {
-                        window.location.href = 'index.html';
-                    }
-                } catch {}
-            }
-        });
     });
 }
 
@@ -331,43 +396,39 @@ let unsubscribeTasks = null;
 let unsubscribeTimetable = null;
 let unsubscribeGratitude = null;
 
-async function loadTasks() {
-    if (!currentUser) return;
-    
-    const selectedDate = document.getElementById('taskDate').value;
-    const tasksRef = db.collection('users').doc(currentUser.uid)
-        .collection('tasks').doc(selectedDate);
-    
+async function loadTasks(userId) {
     try {
-        // Detach old listener
-        if (unsubscribeTasks) { unsubscribeTasks(); unsubscribeTasks = null; }
-        // Attach realtime listener
-        unsubscribeTasks = tasksRef.onSnapshot((snapshot) => {
-            if (snapshot.exists) {
-                tasks = snapshot.data();
-            } else {
-                tasks = { signal: [], noise: [] };
-            }
-            renderTasks();
-        }, (error) => {
-            console.error('Tasks listener error:', error);
-        });
+        if (!userId) throw new Error('No user ID provided');
+        
+        const docRef = db.collection('users').doc(userId).collection('tasks').doc('daily');
+        const doc = await docRef.get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            // Your existing task loading logic here
+            console.log('Tasks loaded:', data);
+        } else {
+            console.log('No tasks found for user');
+            // Initialize empty tasks
+        }
     } catch (error) {
-        console.error('Error loading tasks:', error);
+        console.error('Error loading tasks from Firestore:', error);
+        // Don't throw the error further - handle it gracefully
     }
 }
 
-async function saveTasks() {
-    if (!ensureSignedInOrNotify()) return;
-    
-    const selectedDate = document.getElementById('taskDate').value;
-    const tasksRef = db.collection('users').doc(currentUser.uid)
-        .collection('tasks').doc(selectedDate);
-    
+async function saveTaskData(userId, taskData) {
     try {
-        await tasksRef.set(tasks);
+        if (!userId) throw new Error('No user ID for saving data');
+        
+        await db.collection('users').doc(userId).collection('tasks').doc('daily').set({
+            ...taskData,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Tasks saved successfully');
     } catch (error) {
         console.error('Error saving tasks:', error);
+        // Optionally show user feedback
     }
 }
 
@@ -431,30 +492,23 @@ function renderTasks() {
 }
 
 // Timetable Management
-async function loadTimetable() {
-    if (!currentUser) { renderTimetable(); return; }
-
-    const today = new Date().toISOString().split('T')[0];
-    const timetableRef = db.collection('users').doc(currentUser.uid)
-        .collection('timetable').doc(today);
-
+async function loadTimetable(userId) {
     try {
-        if (unsubscribeTimetable) { unsubscribeTimetable(); unsubscribeTimetable = null; }
-        unsubscribeTimetable = timetableRef.onSnapshot((snapshot) => {
-            if (snapshot.exists) {
-                timetableState = snapshot.data();
-            } else {
-                timetableState = { done: Array(timetableBlocks.length).fill(false), compact: false };
-            }
-            renderTimetable();
-        }, (error) => {
-            console.warn('Timetable listener error:', error);
-            renderTimetable();
-        });
+        if (!userId) throw new Error('No user ID provided');
+        
+        const docRef = db.collection('users').doc(userId).collection('timetable').doc('progress');
+        const doc = await docRef.get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            // Your existing timetable loading logic here
+            console.log('Timetable loaded:', data);
+        } else {
+            console.log('No timetable data found for user');
+            // Initialize empty timetable
+        }
     } catch (error) {
-        console.warn('Falling back to local timetable (Firestore unavailable):', error);
-        timetableState = { done: Array(timetableBlocks.length).fill(false), compact: false };
-        renderTimetable();
+        console.error('Error loading timetable from Firestore:', error);
     }
 }
 
@@ -574,37 +628,26 @@ function isCurrentTimeBlock(timeStr, currentMinutes) {
 }
 
 // Gratitude Journal Management
-async function loadGratitudeEntries() {
-    if (!currentUser) { renderGratitudeEntries(); return; }
-    
-    const selectedDate = document.getElementById('gratitudeDate').value;
-    const localKey = `gratitude_${selectedDate}`;
+async function loadGratitudeEntries(userId) {
     try {
-        const local = JSON.parse(localStorage.getItem(localKey) || '[]');
-        gratitudeEntries = local;
-        renderGratitudeEntries();
-    } catch {}
-    
-    try {
-        if (typeof db !== 'undefined') {
-            if (unsubscribeGratitude) { unsubscribeGratitude(); unsubscribeGratitude = null; }
-            const gratitudeRef = db.collection('users').doc(currentUser.uid)
-                .collection('gratitude').where('date', '==', selectedDate)
-                .orderBy('timestamp', 'desc');
-            unsubscribeGratitude = gratitudeRef.onSnapshot((snapshot) => {
-                const fromDb = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                gratitudeEntries = fromDb;
-                localStorage.setItem(localKey, JSON.stringify(fromDb));
-                renderGratitudeEntries();
-            }, (error) => {
-                console.warn('Using local gratitude entries (listener error):', error);
-            });
+        if (!userId) throw new Error('No user ID provided');
+        
+        const snapshot = await db.collection('users').doc(userId)
+            .collection('gratitude')
+            .orderBy('date', 'desc')
+            .limit(50)
+            .get();
+        
+        if (!snapshot.empty) {
+            // Your existing gratitude loading logic here
+            console.log('Gratitude entries loaded:', snapshot.size);
+        } else {
+            console.log('No gratitude entries found for user');
         }
     } catch (error) {
-        console.warn('Using local gratitude entries (Firestore unavailable):', error);
+        console.error('Error loading gratitude entries from Firestore:', error);
     }
 }
-
 async function addGratitudeEntry() {
     if (!ensureSignedInOrNotify()) return;
     const text = document.getElementById('gratitudeInput').value.trim();
@@ -769,3 +812,40 @@ function formatDate(dateString) {
 
 // Initialize gratitude prompt on load
 updateGratitudePrompt();
+
+// Add these functions to your app.js file
+
+function loadUserData(userId) {
+    console.log('Loading data for user:', userId);
+    
+    // CRITICAL: Check if userId is valid
+    if (!userId || userId.trim() === '') {
+        console.error('Invalid user ID:', userId);
+        return;
+    }
+
+    // Load tasks
+    loadTasks(userId).catch(error => {
+        console.error('Error loading tasks:', error);
+    });
+    
+    // Load timetable
+    loadTimetable(userId).catch(error => {
+        console.error('Error loading timetable:', error);
+    });
+    
+    // Load gratitude entries
+    loadGratitudeEntries(userId).catch(error => {
+        console.error('Error loading gratitude entries:', error);
+    });
+}
+
+function clearUserData() {
+    console.log('Clearing user data');
+    // Clear all UI elements
+    document.getElementById('signalTasks').innerHTML = '';
+    document.getElementById('noiseTasks').innerHTML = '';
+    document.getElementById('timetableList').innerHTML = '';
+    document.getElementById('gratitudeEntries').innerHTML = '';
+}
+

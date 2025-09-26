@@ -4,75 +4,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign in - SuccessApp</title>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    <link rel="stylesheet" href="styles.css?v=20250827">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="styles.css?v=20240918">
     <style>
-    .signin-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .signin-card { background: rgba(0,0,0,0.5); border: 1px solid #263141; border-radius: 16px; padding: 28px; width: 92%; max-width: 440px; text-align: center; color: #e5e7eb; backdrop-filter: blur(10px); }
-    .signin-title { font-size: 1.6rem; margin-bottom: 8px; }
-    .signin-sub { color: #94a3b8; margin-bottom: 18px; }
-    .signin-actions { display: flex; gap: 10px; justify-content: center; }
-    .hidden { display: none; }
+        .signin-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .signin-card { background: rgba(0,0,0,0.5); border: 1px solid #263141; border-radius: 16px; padding: 28px; width: 92%; max-width: 440px; text-align: center; color: #e5e7eb; backdrop-filter: blur(10px); }
+        .signin-title { font-size: 1.6rem; margin-bottom: 8px; }
+        .signin-sub { color: #94a3b8; margin-bottom: 18px; }
+        .signin-actions { display: flex; flex-direction: column; gap: 10px; }
+        .hidden { display: none; }
+        .error-message { color: #f87171; margin-top: 10px; padding: 8px; background: rgba(248, 113, 113, 0.1); border-radius: 8px; }
+        .success-message { color: #4ade80; margin-top: 10px; padding: 8px; background: rgba(74, 222, 128, 0.1); border-radius: 8px; }
+        .loading { opacity: 0.7; pointer-events: none; }
     </style>
-    <script>
-      // Prevent cached version issues
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
-      }
-    </script>
 </head>
 <body>
   <div class="signin-container">
     <div class="signin-card">
       <h1 class="signin-title">SuccessApp</h1>
       <p class="signin-sub">Sign in with Google to continue</p>
-      <div id="signinMessage" class="signin-sub"></div>
+      <div id="statusMessage"></div>
       <div class="signin-actions">
         <button id="goSignIn" class="control-btn">Sign in with Google</button>
-        <button id="goApp" class="control-btn hidden">Go to app</button>
+        <button id="goApp" class="control-btn hidden">Go to App</button>
+        <button id="retryBtn" class="control-btn hidden warning">Retry Sign In</button>
       </div>
     </div>
   </div>
 
-  <script src="firebase-config.js?v=20250827"></script>
+  <script src="firebase-config.js"></script>
   <script>
     (function(){
-      const msg = document.getElementById('signinMessage');
-      const goSignIn = document.getElementById('goSignIn');
-      const goApp = document.getElementById('goApp');
+      const statusEl = document.getElementById('statusMessage');
+      const goSignInBtn = document.getElementById('goSignIn');
+      const goAppBtn = document.getElementById('goApp');
+      const retryBtn = document.getElementById('retryBtn');
 
-      function toApp(){ window.location.href = 'index.html'; }
-
-      if (typeof auth === 'undefined' || typeof googleProvider === 'undefined') {
-        msg.textContent = 'Auth not initialized. Refresh the page.';
-      } else {
-        auth.getRedirectResult().catch(e => console.warn('[Auth] redirect result error', e));
-        auth.onAuthStateChanged((user) => {
-          if (user) {
-            msg.textContent = '';
-            goSignIn.classList.add('hidden');
-            goApp.classList.remove('hidden');
-          } else {
-            msg.textContent = '';
-            goSignIn.classList.remove('hidden');
-            goApp.classList.add('hidden');
-          }
-        });
-
-        goSignIn.addEventListener('click', async () => {
-          try {
-            await auth.signInWithRedirect(googleProvider);
-          } catch (e) {
-            msg.textContent = 'Sign-in failed. Check console and popup settings.';
-            console.error(e);
-          }
-        });
-        goApp.addEventListener('click', toApp);
+      function showMessage(text, isError = false) {
+        statusEl.innerHTML = `<div class="${isError ? 'error-message' : 'success-message'}">${text}</div>`;
       }
+
+      function setLoading(loading) {
+        goSignInBtn.classList.toggle('loading', loading);
+        goSignInBtn.disabled = loading;
+      }
+
+      function toApp() {
+        window.location.href = 'index.html';
+      }
+
+      // MOBILE-FRIENDLY SIGN-IN FUNCTION
+      async function signIn() {
+        setLoading(true);
+        showMessage('Redirecting to Google...');
+        
+        try {
+          // Always use redirect for mobile devices - it's more reliable
+          await auth.signInWithRedirect(googleProvider);
+          // The page will redirect away, so we don't need to handle anything else here
+          
+        } catch (error) {
+          setLoading(false);
+          console.error('Sign-in error:', error);
+          
+          if (error.code === 'auth/popup-blocked') {
+            showMessage('Popups are blocked. Please allow popups or try the redirect method.', true);
+          } else if (error.code === 'auth/unauthorized-domain') {
+            showMessage('Authentication error. Please contact support.', true);
+          } else {
+            showMessage('Could not sign in. Please try again.', true);
+          }
+          
+          retryBtn.classList.remove('hidden');
+        }
+      }
+
+      // Handle redirect result
+      auth.getRedirectResult()
+        .then((result) => {
+          const user = result.user;
+          if (user) {
+            showMessage('Success! Redirecting to app...');
+            // Small delay to show success message
+            setTimeout(toApp, 1000);
+          }
+        }).catch((error) => {
+          console.error('Redirect result error:', error);
+          // Don't show error message here - it's normal for first-time visits
+        });
+
+      // Listen for auth state changes
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          // User is signed in from a previous session
+          goSignInBtn.classList.add('hidden');
+          goAppBtn.classList.remove('hidden');
+          showMessage('You are already signed in.');
+        }
+      });
+
+      // Event listeners
+      goSignInBtn.addEventListener('click', signIn);
+      goAppBtn.addEventListener('click', toApp);
+      retryBtn.addEventListener('click', () => {
+        retryBtn.classList.add('hidden');
+        signIn();
+      });
+
+      // Check if we're coming back from a redirect
+      if (window.location.hash.includes('access_token') || 
+          window.location.search.includes('authuser=')) {
+        showMessage('Completing sign-in...');
+      }
+
     })();
   </script>
 </body>
 </html>
-
-

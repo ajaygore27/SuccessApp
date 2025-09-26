@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SuccessApp - Daily Task Tracker, Timetable & Gratitude Journal</title>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <!-- Firebase SDK - Load these FIRST -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -149,7 +149,111 @@
         </main>
     </div>
 
-    <script src="firebase-config.js?v=20250827"></script>
-    <script src="app.js?v=20250827"></script>
+    <!-- 1. Load Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- 2. Load Main App Logic -->
+    <script src="app.js"></script>
+    
+    <!-- 3. Initialize Auth - This MUST run after all dependencies are loaded -->
+    <script>
+        // Wait for DOM and all scripts to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing auth...');
+            initializeAuth();
+        });
+
+        function initializeAuth() {
+            // ===== AUTHENTICATION STATE MANAGEMENT =====
+            let userData = null;
+
+            // UI Elements
+            const userInfoEl = document.getElementById('userInfo');
+            const authMessageEl = document.getElementById('authMessage');
+            const signInBtn = document.getElementById('signInBtn');
+            const signOutBtn = document.getElementById('signOutBtn');
+            const authOverlay = document.getElementById('authOverlay');
+            const overlaySignInBtn = document.getElementById('overlaySignInBtn');
+
+            // Function to update UI based on auth state
+            function updateUI(user) {
+                if (user) {
+                    // User is signed in
+                    userData = user;
+                    userInfoEl.textContent = `Hi, ${user.displayName}`;
+                    signInBtn.style.display = 'none';
+                    signOutBtn.style.display = 'block';
+                    authOverlay.style.display = 'none'; // Hide the overlay
+                    authMessageEl.textContent = '';
+
+                    // Load user-specific app data here
+                    console.log('User signed in:', user.uid);
+                    if (window.loadUserData) {
+                        loadUserData(user.uid);
+                    }
+
+                } else {
+                    // User is signed out
+                    userData = null;
+                    userInfoEl.textContent = '';
+                    signInBtn.style.display = 'block';
+                    signOutBtn.style.display = 'none';
+                    authOverlay.style.display = 'flex'; // Show the overlay
+                    authMessageEl.textContent = 'Please sign in.';
+
+                    // Clear any user-specific data from the UI
+                    if (window.clearUserData) {
+                        clearUserData();
+                    }
+                }
+            }
+
+            // Function to show an auth error message
+            function showAuthError(message) {
+                authMessageEl.textContent = message;
+                authMessageEl.style.color = '#f87171'; // Red color for error
+            }
+
+            // Initialize auth state listener
+            auth.onAuthStateChanged((user) => {
+                console.log('Auth state changed:', user ? 'User in' : 'User out');
+                updateUI(user);
+            }, (error) => {
+                // Error occurred in the listener itself (rare)
+                console.error('Auth state listener error:', error);
+                showAuthError('Authentication error. Please refresh the page.');
+            });
+
+            // Attach event listeners to buttons
+            signInBtn.addEventListener('click', () => {
+                auth.signInWithRedirect(googleProvider)
+                    .catch((error) => {
+                        console.error('Sign-in error:', error);
+                        showAuthError('Could not start sign-in. Check popup blockers.');
+                    });
+            });
+
+            overlaySignInBtn.addEventListener('click', () => {
+                auth.signInWithRedirect(googleProvider)
+                    .catch((error) => {
+                        console.error('Overlay sign-in error:', error);
+                        showAuthError('Could not start sign-in.');
+                    });
+            });
+
+            signOutBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to sign out?')) {
+                    auth.signOut()
+                        .then(() => {
+                            console.log('User signed out');
+                        })
+                        .catch((error) => {
+                            console.error('Sign-out error:', error);
+                            showAuthError('Could not sign out.');
+                        });
+                }
+            });
+        }
+    </script>
 </body>
 </html>
